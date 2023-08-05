@@ -24,6 +24,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navArgument
+import androidx.navigation.compose.rememberNavController
+import com.google.gson.Gson
 import com.herpestes.foodapp.ui.theme.FoodAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -36,15 +43,34 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Anasayfa()
+                    SayfaGecisleri()
                 }
             }
         }
     }
 }
-
 @Composable
-fun Anasayfa() {
+fun SayfaGecisleri() {
+
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "anasayfa"){
+        composable("anasayfa"){
+            Anasayfa(navController = navController)
+        }
+        composable("detay_sayfa/{yemek}", arguments = listOf(
+            navArgument("yemek"){
+                type = NavType.StringType
+            }
+        )){
+            val json = it.arguments?.getString("yemek")
+            val yemek = Gson().fromJson(json,Yemekler::class.java)
+            DetaySayfa(yemek=yemek)
+        }
+    }
+
+}
+@Composable
+fun Anasayfa(navController: NavController) {
     val yemekListesi = remember {
         mutableStateListOf<Yemekler>()
     }
@@ -83,7 +109,8 @@ fun Anasayfa() {
                                 .fillMaxWidth()
                         ) {
                             Row(modifier = Modifier.clickable {
-
+                                val yemekJson = Gson().toJson(yemek)
+                                navController.navigate("detay_sayfa/$yemekJson")
                             }) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -114,6 +141,7 @@ fun Anasayfa() {
                                         ) {
 
                                             Text(text = yemek.yemek_adi, fontSize = 20.sp)
+                                            Spacer(modifier = Modifier.size(30.dp))
                                             Text(
                                                 text = "${yemek.yemek_fiyat} ₺",
                                                 color = Color.Blue
@@ -144,6 +172,6 @@ fun Anasayfa() {
 @Composable
 fun DefaultPreview() {
     FoodAppTheme {
-        Anasayfa()
+
     }
 }
